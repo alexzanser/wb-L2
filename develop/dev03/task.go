@@ -2,15 +2,12 @@ package main
 
 import (
 	"bufio"
-	"log"
-	// "flag"
-	"fmt"
 	// "log"
+	"fmt"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
-	// log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -63,60 +60,79 @@ func SortHumanNumeric(keys map[string]*bool, lines [][]string) {
 // var field *int
 var field int
 
+
+type Key struct {
+	k					int
+	numericSort 		bool
+	reverse				bool
+	unique				bool
+	monthSort			bool
+	ignoreLeadingBlanks	bool
+	check				bool
+	humanNumericSort	bool
+}
+
+func InitKeys(cobra key *Key) {
+
+} 
+
 func main() {
     rootCmd := cobra.Command{}
 	rootCmd.PersistentFlags().BoolP("help", "", false, "help for this command")
 	rootCmd.Flags().IntVarP(&field, "key", "k", 1, "field")
 	
-	keys := make(map[string]*bool, 0)
-	keys["numericSort"] = rootCmd.Flags().BoolP("numeric-sort", "n", false, "numeric-sort")
-	keys["reverse"] = rootCmd.Flags().BoolP("reverse", "r", false, "reverse")
-	keys["unique"] = rootCmd.Flags().BoolP("unique", "u", false, "unique")
-	keys["monthSort"] = rootCmd.Flags().BoolP("month-sort", "M", false, "month-sort")
-	keys["ignoreLeadingBlanks"] = rootCmd.Flags().BoolP("ignore-leading-blanks", "b", false, "ignore-leading-blanks")
-	// check := rootCmd.Flags().BoolP("check", "c", false, "check")
-	keys["humanNumericSort"] = rootCmd.Flags().BoolP("human-numeric-sort", "h", false, "human-numeric-sort")
+	key := &Key{}
+	rootCmd.Flags().BoolVarP(&key.numericSort, "numeric-sort", "n", false, "numeric-sort")
 
-    err := rootCmd.Execute()
-	field -= 1
-    if err != nil {
-        log.Fatal(fmt.Errorf("required argument missing: %v", err))
-    }
+	rootCmd.Flags().BoolVarP(&key.reverse, "reverse", "r", false, "reverse")
+	rootCmd.Flags().BoolVarP(&key.unique, "unique", "u", false, "unique")
+	rootCmd.Flags().BoolVarP(&key.monthSort, "month-sort", "M", false, "month-sort")
+	rootCmd.Flags().BoolVarP(&key.ignoreLeadingBlanks, "ignore-leading-blanks", "b", false, "ignore-leading-blanks")
 
-	if len(os.Args) < 2 {
-		log.Fatal(fmt.Errorf("missing filename"))
-        return
-    }
+	rootCmd.Flags().BoolVarP(&key.check, "check", "c", false, "check")
+	rootCmd.Flags().BoolVarP(&key.humanNumericSort, "human-numeric-sort", "h", false, "human-numeric-sort")
 
-	lines , err := GetLines(os.Args[1])
-	if err != nil {
-		log.Fatal(fmt.Errorf("error when getting lines: %v", err))
-	}
+    _ = rootCmd.Execute()
+	fmt.Println(key.numericSort)
+	// field -= 1
+    // if err != nil {
+    //     log.Fatal(fmt.Errorf("required argument missing: %v", err))
+    // }
+
+	// if len(os.Args) < 2 {
+	// 	log.Fatal(fmt.Errorf("missing filename"))
+    //     return
+    // }
+
+	// lines , err := GetLines(os.Args[1])
+	// if err != nil {
+	// 	log.Fatal(fmt.Errorf("error when getting lines: %v", err))
+	// }
 	
-	if len(lines[0]) > 0 && len(lines[0]) < field {
-		log.Fatal(fmt.Errorf("invalid argument k"))
-	}
+	// if len(lines[0]) > 0 && len(lines[0]) < field {
+	// 	log.Fatal(fmt.Errorf("invalid argument k"))
+	// }
 
-	a := []bool{*keys["numericSort"], *keys["monthSort"], *keys["humanNumericSort"]}
-	k := 0
-	for _ , key := range  a {
-		if key {
-			k += 1
-		}
-	}
+	// a := []bool{*keys["numericSort"], *keys["monthSort"], *keys["humanNumericSort"]}
+	// k := 0
+	// for _ , key := range  a {
+	// 	if key {
+	// 		k += 1
+	// 	}
+	// }
 
-	if k > 1 { 
-		log.Fatal(fmt.Errorf("mutually exclusive flags"))
-	}
+	// if k > 1 { 
+	// 	log.Fatal(fmt.Errorf("mutually exclusive flags"))
+	// }
 
-	if *keys["numericSort"] {
-		SortNumeric(keys, lines)
-	} else if *keys["humanNumericSort"] {
-		SortHumanNumeric(keys, lines)
-	} else {
-		sort.Slice(lines, 
-			func(i, j int) bool {return lines[i][field] < lines[j][field]})
-	}
+	// if *keys["numericSort"] {
+	// 	SortNumeric(keys, lines)
+	// } else if *keys["humanNumericSort"] {
+	// 	SortHumanNumeric(keys, lines)
+	// } else {
+	// 	sort.Slice(lines, 
+	// 		func(i, j int) bool {return lines[i][field] < lines[j][field]})
+	// }
 
 	// } else if *humanNumericSort {
 	// 	SortHumanNumeric(keys, lines)
@@ -127,5 +143,5 @@ func main() {
 	// if *check {
 	// 	Check(keys, lines)
 	// }
-	fmt.Println(lines)
+	// fmt.Println(lines)
 }
