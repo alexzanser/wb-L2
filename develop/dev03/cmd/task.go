@@ -52,21 +52,21 @@ func CheckArguments(lines linesmodule.Lines, key *Key) error {
 	return nil
 }
 
-func Sort(lines *linesmodule.Lines, key *Key) {
-	lines.SetColumn(*lines, key.k)
+func Sort(lines linesmodule.Lines, key *Key) {
+	lines.SetColumn(lines, key.k)
 
 	if key.numericSort {
-		sort.Slice(*lines, lines.SortNumeric)
+		sort.Slice(lines, lines.SortNumeric)
 	} else if key.humanNumericSort {
-		sort.Slice(*lines, lines.SortHumanNumeric)
+		sort.Slice(lines, lines.SortHumanNumeric)
 	} else if key.monthSort {
-		sort.Slice(*lines, lines.SortMonth)
+		sort.Slice(lines, lines.SortMonth)
 	} else {
-		sort.Slice(*lines, lines.StandartSort)
+		sort.Slice(lines, lines.StandartSort)
 	}
 
 	if key.unique {
-		lines.Unique()
+		lines = lines.Unique()
 	}
 	if key.reverse {
 		lines.Reverse()
@@ -79,16 +79,14 @@ func Sort(lines *linesmodule.Lines, key *Key) {
 func main() {
 	cmd := &cobra.Command{}
 	key := &Key{}
-	lines := linesmodule.Lines{}
 
 	InitKeys(cmd, key)
 	err := cmd.Execute()
-
 	if err != nil {
 		log.Fatal(fmt.Errorf("required argument missing: %v", err))
 	}
 
-	lines, err = linesmodule.GetLines(os.Args[1])
+	lines, err := linesmodule.GetLines(os.Args[1])
 	if err != nil {
 		log.Fatal(fmt.Errorf("error when getting lines: %v", err))
 	}
@@ -97,7 +95,7 @@ func main() {
 		log.Fatal(fmt.Errorf("invalid arguments: %v", err))
 	}
 
-	Sort(&lines, key)
+	Sort(lines, key)
 
 	for _, line := range lines {
 		fmt.Println(line[1])

@@ -120,17 +120,17 @@ func (l Lines) SortMonth(i, j int) bool {
 	return l[i][0] < l[j][0]
 }
 
-func (l *Lines) Unique() {
+func (l Lines) Unique() Lines {
 	inResult := make(map[string]bool)
 	var result Lines
-	for _, line := range *l {
+	for _, line := range l {
 		str := line[0]
 		if _, ok := inResult[str]; !ok {
 			inResult[str] = true
 			result = append(result, line)
 		}
 	}
-	*l = result
+	return result
 }
 
 func (l Lines) Reverse() {
@@ -150,9 +150,10 @@ func (l Lines) SetColumn(lines Lines, column int) {
 	column -= 1
 	for i := range l {
 		strArr := strings.Split(l[i][1], " ")
-		if column > len(strArr)-1 {
-			column = len(strArr) - 1
+		if column > len(strArr) - 1 {
+			l[i][0] = strArr[len(strArr) - 1]
+		} else {
+			l[i][0] = strArr[column]
 		}
-		l[i][0] = strArr[column]
 	}
 }

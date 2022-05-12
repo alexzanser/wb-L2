@@ -53,15 +53,15 @@ feb`,
 func Test(t *testing.T) {
 	cmd := &cobra.Command{}
 	key := &sort.Key{}
-	lines := linesmodule.Lines{}
+
 	sort.InitKeys(cmd, key)
 
 	for _, test := range TestCases {
 		cmd.ParseFlags(strings.Split(test.flags, " "))
 		_ = cmd.Execute()
 	
-		lines, _ = linesmodule.GetLines(test.input)
-		sort.Sort(&lines, key)
+		lines, _ := linesmodule.GetLines(test.input)
+		sort.Sort(lines, key)
 	
 		var sb strings.Builder
 		for i, line := range lines {
