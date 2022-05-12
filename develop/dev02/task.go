@@ -12,7 +12,6 @@ func Unpack(str string) (string, error) {
 	res := make([]rune, 0)
 
 	shield := false
-
 	i := 0
 	for i < len(rns) {
 		if string(rns[i]) == "\\" && !shield {

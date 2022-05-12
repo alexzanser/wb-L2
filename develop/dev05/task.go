@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +15,7 @@ type Key struct {
 	invert				bool
 	fixed               bool
 	lineNum				bool
+	diapason			
 }
 
 func InitKeys(rootCmd *cobra.Command, key *Key) {

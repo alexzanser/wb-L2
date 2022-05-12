@@ -82,7 +82,7 @@ func main() {
 
 	InitKeys(cmd, key)
 	
-	if err := cmd.Execute(); err != nil {
+	if err := cmd.Execute(); err != nil || len(os.Args[1]) < 2 {
 		log.Fatal(fmt.Errorf("required argument missing: %v", err))
 	}
 
