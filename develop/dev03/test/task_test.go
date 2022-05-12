@@ -1,9 +1,9 @@
-package sort
+package test
 
 import (
 	"testing"
 	"github.com/spf13/cobra"
-	"sort/cmd"
+	"sort/sort"
 	"strings"
 	linesmodule "sort/internal/lines"
 )
