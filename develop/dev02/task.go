@@ -14,9 +14,7 @@ func Unpack(str string) (string, error) {
 	shield := false
 	i := 0
 	for i < len(rns) {
-		if string(rns[i]) == "\\" && !shield {
-			shield = true
-		} else if unicode.IsLetter(rns[i]) || shield {
+		if shield == true || unicode.IsLetter(rns[i]) {
 			if i < len(rns)-1 && unicode.IsDigit(rns[i+1]) {
 				n, _ := strconv.Atoi(string(rns[i+1]))
 				for j := 0; j < n; j++ {
@@ -27,9 +25,13 @@ func Unpack(str string) (string, error) {
 				res = append(res, rns[i])
 			}
 			shield = false
-		} else if !unicode.IsDigit(rns[i]) || (unicode.IsDigit(rns[i]) && !shield){
-			return "", fmt.Errorf("incorrect input") 
-		} 
+		} else if shield == false {
+			if string(rns[i]) == "\\" {
+				shield = true
+			} else {
+				return "", fmt.Errorf("incorrect input")
+			}
+		}
 		i++
 	}
 	return string(res), nil
