@@ -12,16 +12,16 @@ import (
 )
 
 type Key struct {
-	after				int
-	before				int
-	context             int
-	count				int
-	ignoreCase			bool
-	invert				bool
-	fixed               bool
-	lineNum				bool
-	pattern				string
-	filename			string
+	after      int
+	before     int
+	context    int
+	count      int
+	ignoreCase bool
+	invert     bool
+	fixed      bool
+	lineNum    bool
+	pattern    string
+	filename   string
 }
 
 func InitKeys(rootCmd *cobra.Command, key *Key) {
@@ -45,8 +45,8 @@ func GetLines(key *Key) ([]string, error) {
 		fileName = os.Stdin.Name()
 	}
 
-	file , err := os.Open(fileName)
-	if 	err != nil {
+	file, err := os.Open(fileName)
+	if err != nil {
 		return nil, fmt.Errorf("Error wheh open file: %v", err)
 	}
 
@@ -60,18 +60,36 @@ func GetLines(key *Key) ([]string, error) {
 
 }
 
-func Compare(line, pattern string) bool {
-
+func Compare(key *Key, line, pattern string) bool {
 	if key.ignoreCase {
-		line, pattern  = strings.ToLower(line), strings.ToLower(pattern)
+		line, pattern = strings.ToLower(line), strings.ToLower(pattern)
 	}
 
 	if key.fixed {
 		return line == pattern
 	}
 
-	ret , _ := regexp.MatchString(pattern, line)
+	ret, _ := regexp.MatchString(pattern, line)
 	return ret
+}
+
+func Contains(lines []string, line string) bool {
+	for _, a := range lines {
+		if a == line {
+			return true
+		}
+	}
+	return false
+}
+
+func UniquePrint(printed[] string, line string) []string {
+	if Contains(printed, line) == false {
+		printed = append(printed, line)
+		fmt.Println(line)
+	}
+
+	return printed
+}
 
 func Grep(key *Key) ([]string, error) {
 	if key.count > 0 {
@@ -82,26 +100,24 @@ func Grep(key *Key) ([]string, error) {
 		key.before = key.context
 		key.after = key.context
 	}
-	
-	pattern := os.Args[1]
 
 	lines, err := GetLines(key)
-	if  err != nil {
+	if err != nil {
 		return nil, fmt.Errorf("Error when get lines: %v", err)
 	}
 
+	pattern := os.Args[1]
+	printed := make([]string, 0)
 	for i, line := range lines {
-		if Compare(line, pattern) && key.invert == false {
-			for j:= key.before; i - j > 0; j-- {
-				fmt.Println(lines[i - j])
+		if Compare(key, line, pattern) != key.invert {
+			for j := key.before; j >= 0 && i-j >= 0; j-- {
+				printed = UniquePrint(printed, lines[i-j])
 			}
-			for j:= key.after; i + j < len(lines) - 1; j++ {
-				fmt.Println(lines[i + j])
+			for j := 0; j <= key.after && i+j < len(lines)-1; j++ {
+				printed = UniquePrint(printed, lines[i+j])
 			}
 		}
 	}
-
-
 	return lines, nil
 }
 
@@ -111,7 +127,7 @@ func main() {
 
 	InitKeys(cmd, key)
 
-	if err := cmd.Execute(); err != nil || len(os.Args) < 2{
+	if err := cmd.Execute(); err != nil || len(os.Args) < 2 {
 		log.Fatal(fmt.Errorf("required argument missing: %v", err))
 	}
 
