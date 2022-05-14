@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"bufio"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +17,8 @@ type Key struct {
 	invert				bool
 	fixed               bool
 	lineNum				bool
-	diapason			
+	pattern				string
+	filename			string
 }
 
 func InitKeys(rootCmd *cobra.Command, key *Key) {
@@ -29,8 +32,45 @@ func InitKeys(rootCmd *cobra.Command, key *Key) {
 	rootCmd.Flags().BoolVarP(&key.lineNum, "line-number", "n", false, "line-number")
 }
 
-func Grep(key *Key) []string {
-	
+func GetLines(key *Key) ([]string, error) {
+
+	var fileName string
+
+	if len(os.Args) >= 3 {
+		fileName = os.Args[2]
+	} else {
+		fileName = os.Stdin.Name()
+	}
+
+	file , err := os.Open(fileName)
+	if 	err != nil {
+		return nil, fmt.Errorf("Error wheh open file: %v", err)
+	}
+
+	lines := make([]string, 0)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	return lines, nil
+
+}
+
+func Grep(key *Key) ([]string, error) {
+	if key.context > 0 {
+		key.before = key.context
+		key.after = key.context
+	}
+
+	// pattern := os.Args[1]
+
+	lines, err := GetLines(key)
+	if  err != nil {
+		return nil, fmt.Errorf("Error when get lines: %v", err)
+	}
+
+	return lines, nil
 }
 
 func main() {
@@ -39,7 +79,7 @@ func main() {
 
 	InitKeys(cmd, key)
 
-	if err := cmd.Execute(); err != nil {
+	if err := cmd.Execute(); err != nil || len(os.Args) < 2{
 		log.Fatal(fmt.Errorf("required argument missing: %v", err))
 	}
 
