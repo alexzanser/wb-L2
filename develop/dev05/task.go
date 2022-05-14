@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
-	"bufio"
+	"regexp"
+	"strings"
+
 	"github.com/spf13/cobra"
 )
 
@@ -57,18 +60,47 @@ func GetLines(key *Key) ([]string, error) {
 
 }
 
+func Compare(line, pattern string) bool {
+
+	if key.ignoreCase {
+		line, pattern  = strings.ToLower(line), strings.ToLower(pattern)
+	}
+
+	if key.fixed {
+		return line == pattern
+	}
+
+	ret , _ := regexp.MatchString(pattern, line)
+	return ret
+
 func Grep(key *Key) ([]string, error) {
+	if key.count > 0 {
+		key.after = key.count
+	}
+
 	if key.context > 0 {
 		key.before = key.context
 		key.after = key.context
 	}
-
-	// pattern := os.Args[1]
+	
+	pattern := os.Args[1]
 
 	lines, err := GetLines(key)
 	if  err != nil {
 		return nil, fmt.Errorf("Error when get lines: %v", err)
 	}
+
+	for i, line := range lines {
+		if Compare(line, pattern) && key.invert == false {
+			for j:= key.before; i - j > 0; j-- {
+				fmt.Println(lines[i - j])
+			}
+			for j:= key.after; i + j < len(lines) - 1; j++ {
+				fmt.Println(lines[i + j])
+			}
+		}
+	}
+
 
 	return lines, nil
 }
