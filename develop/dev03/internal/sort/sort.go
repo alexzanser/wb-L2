@@ -20,7 +20,7 @@ type Key struct {
 	humanNumericSort    bool
 }
 
-//InitKeys receives flags and set them to struct Key
+//InitKeys receives flags and set them to fields of struct Key
 func InitKeys(rootCmd *cobra.Command, key *Key) {
 	rootCmd.PersistentFlags().BoolP("help", "", false, "help for this command")
 	rootCmd.Flags().IntVarP(&key.k, "key", "k", 1, "field")
