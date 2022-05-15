@@ -2,7 +2,6 @@ package sort
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"sort"
 	linesmodule "sort/internal/lines"
@@ -77,31 +76,5 @@ func Sort(lines linesmodule.Lines, key *Key) {
 	}
 	if key.ignoreTailingBlanks {
 		lines.IgnoreTailingSpaces()
-	}
-}
-
-func main() {
-	cmd := &cobra.Command{}
-	key := &Key{}
-
-	InitKeys(cmd, key)
-	
-	if err := cmd.Execute(); err != nil || len(os.Args[1]) < 2 {
-		log.Fatal(fmt.Errorf("required argument missing: %v", err))
-	}
-	
-	lines, err := linesmodule.GetLines(os.Args[1])
-	if err != nil {
-		log.Fatal(fmt.Errorf("error when getting lines: %v", err))
-	}
-
-	if err := CheckArguments(lines, key); err != nil {
-		log.Fatal(fmt.Errorf("invalid arguments: %v", err))
-	}
-
-	Sort(lines, key)
-
-	for _, line := range lines {
-		fmt.Println(line[1])
 	}
 }

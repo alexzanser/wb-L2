@@ -3,7 +3,7 @@ package test
 import (
 	"testing"
 	"github.com/spf13/cobra"
-	"sort/sort"
+	"sort/internal/sort"
 	"strings"
 	linesmodule "sort/internal/lines"
 )
