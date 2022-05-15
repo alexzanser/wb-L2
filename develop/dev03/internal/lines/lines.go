@@ -9,8 +9,10 @@ import (
 	"strings"
 )
 
+//Lines is redefenition of [][]string 
 type Lines [][]string
 
+//GetLines return file lines
 func GetLines(filename string) ([][]string, error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -30,6 +32,7 @@ func GetLines(filename string) ([][]string, error) {
 //source https://github.com/skarademir/naturalsort/blob/master/naturalsort.go
 var r = regexp.MustCompile(`[^0-9]+|[0-9]+`)
 
+//SortHumanNumeric compares input in human readable format
 func (l Lines) SortHumanNumeric(i, j int) bool {
 	spliti := r.FindAllString(strings.Replace(l[i][0], " ", "", -1), -1)
 	splitj := r.FindAllString(strings.Replace(l[j][0], " ", "", -1), -1)
@@ -74,10 +77,12 @@ func isNumber(input uint8) bool {
 	return input >= '0' && input <= '9'
 }
 
+//StandartSort compares input in lexicographical format
 func (l Lines) StandartSort(i, j int) bool {
 	return l[i][0] <= l[j][0]
 }
 
+//SortNumeric compares input in numeric format
 func (l Lines) SortNumeric(i, j int) bool {
 	d1, err1 := strconv.ParseFloat(l[i][0], 64)
 	d2, err2 := strconv.ParseFloat(l[j][0], 64)
@@ -95,6 +100,7 @@ func (l Lines) SortNumeric(i, j int) bool {
 
 var month = []string{"jan", "feb", "mar", "apr", "may", "june", "july", "aug", "sep", "oct", "nov", "dec"}
 
+//MonthIndex returns index of month
 func MonthIndex(str string) int {
 	i := 0
 	for _, m := range month {
@@ -106,6 +112,7 @@ func MonthIndex(str string) int {
 	return -1
 }
 
+//SortMonth compares input in month format
 func (l Lines) SortMonth(i, j int) bool {
 	i1 := MonthIndex(l[i][0])
 	i2 := MonthIndex(l[j][0])
@@ -120,6 +127,7 @@ func (l Lines) SortMonth(i, j int) bool {
 	return l[i][0] < l[j][0]
 }
 
+//Unique removes repeating lines from output
 func (l Lines) Unique() Lines {
 	inResult := make(map[string]bool)
 	var result Lines
@@ -133,21 +141,23 @@ func (l Lines) Unique() Lines {
 	return result
 }
 
+//Reverse ...
 func (l Lines) Reverse() {
 	for i, j := 0, len(l)-1; i < j; i, j = i+1, j-1 {
 		l[i], l[j] = l[j], l[i]
 	}
 }
 
+//IgnoreTailingSpaces removes tailing spaces
 func (l Lines) IgnoreTailingSpaces() {
 	for i := range l {
 		l[i][1] = strings.TrimRight(l[i][1], " ")
 	}
 }
 
+//SetColumn sets column to compare with
 func (l Lines) SetColumn(lines Lines, column int) {
-
-	column -= 1
+	column--
 	for i := range l {
 		strArr := strings.Split(l[i][1], " ")
 		if column > len(strArr) - 1 {

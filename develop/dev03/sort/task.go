@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+//Key is a struct for program flags received from cobra
 type Key struct {
 	k                   int
 	numericSort         bool
@@ -20,6 +21,7 @@ type Key struct {
 	humanNumericSort    bool
 }
 
+//InitKeys receives flags and set them to struct Key
 func InitKeys(rootCmd *cobra.Command, key *Key) {
 	rootCmd.PersistentFlags().BoolP("help", "", false, "help for this command")
 	rootCmd.Flags().IntVarP(&key.k, "key", "k", 1, "field")
@@ -32,6 +34,7 @@ func InitKeys(rootCmd *cobra.Command, key *Key) {
 	rootCmd.Flags().BoolVarP(&key.humanNumericSort, "human-numeric-sort", "h", false, "human-numeric-sort")
 }
 
+//CheckArguments validates received program flags
 func CheckArguments(lines linesmodule.Lines, key *Key) error {
 	if len(os.Args) < 2 {
 		return fmt.Errorf("missing filename")
@@ -41,7 +44,7 @@ func CheckArguments(lines linesmodule.Lines, key *Key) error {
 	k := 0
 	for _, flag := range a {
 		if flag {
-			k += 1
+			k++
 		}
 	}
 
@@ -52,6 +55,7 @@ func CheckArguments(lines linesmodule.Lines, key *Key) error {
 	return nil
 }
 
+//Sort select sorting mode and additional options
 func Sort(lines linesmodule.Lines, key *Key) {
 	lines.SetColumn(lines, key.k)
 
@@ -85,7 +89,7 @@ func main() {
 	if err := cmd.Execute(); err != nil || len(os.Args[1]) < 2 {
 		log.Fatal(fmt.Errorf("required argument missing: %v", err))
 	}
-
+	
 	lines, err := linesmodule.GetLines(os.Args[1])
 	if err != nil {
 		log.Fatal(fmt.Errorf("error when getting lines: %v", err))

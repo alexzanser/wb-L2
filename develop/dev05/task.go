@@ -73,22 +73,45 @@ func Compare(key *Key, line, pattern string) bool {
 	return ret
 }
 
-func Contains(lines []string, line string) bool {
+func Contains(lines []int, idx int) bool {
 	for _, a := range lines {
-		if a == line {
+		if a == idx {
 			return true
 		}
 	}
 	return false
 }
 
-func UniquePrint(printed[] string, line string) []string {
-	if Contains(printed, line) == false {
-		printed = append(printed, line)
-		fmt.Println(line)
+type group struct {
+	index []int
+	left  int
+	right int
+}
+
+func GetBorders(key *Key, idx int, len int) (int, int) {
+	left := idx - key.before
+	right := idx + key.after
+
+	if left < 0 {
+		left = 0
+	}
+	if right >= len {
+		right = len - 1
 	}
 
-	return printed
+	return left, right
+}
+
+func UniquePrint(prevGroup, group *group, lines []string, idx int) {
+	if len(group.index) == 0 && idx != 0 {
+		if Contains(prevGroup.index, group.left) == false {
+			fmt.Println("--")
+		}
+	}
+	if Contains(prevGroup.index, idx) == false {
+		fmt.Println(lines[idx])
+		group.index = append(group.index, idx)
+	}
 }
 
 func Grep(key *Key) ([]string, error) {
@@ -97,8 +120,12 @@ func Grep(key *Key) ([]string, error) {
 	}
 
 	if key.context > 0 {
-		key.before = key.context
-		key.after = key.context
+		if key.before == 0 {
+			key.before = key.context
+		}
+		if key.after == 0 {
+			key.after = key.context
+		}
 	}
 
 	lines, err := GetLines(key)
@@ -107,16 +134,19 @@ func Grep(key *Key) ([]string, error) {
 	}
 
 	pattern := os.Args[1]
-	printed := make([]string, 0)
+	prevGroup := &group{}
+	gr := &group{}
 	for i, line := range lines {
 		if Compare(key, line, pattern) != key.invert {
-			for j := key.before; j >= 0 && i-j >= 0; j-- {
-				printed = UniquePrint(printed, lines[i-j])
-			}
-			for j := 0; j <= key.after && i+j < len(lines)-1; j++ {
-				printed = UniquePrint(printed, lines[i+j])
+			left, right := GetBorders(key, i, len(lines))
+			gr = &group{left: left, right: right}
+			for j := left; j <= right; j++ {
+				UniquePrint(prevGroup, gr, lines, j)
 			}
 		}
+		prevGroup.index = append(prevGroup.index, gr.index...)
+		prevGroup.left = gr.left
+		prevGroup.right = gr.right
 	}
 	return lines, nil
 }
