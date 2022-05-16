@@ -1,13 +1,24 @@
 package cut
 
 import (
-	"cut/internal/key"
 	"bufio"
-	"os"
+	"cut/internal/key"
 	"fmt"
+	"os"
+	"strings"
 )
 
-func GetLines(key *key.Key) ([]string, error) {
+type cut struct {
+	key *key.Key
+}
+
+//New returns instance of type cut
+func New(key *key.Key) *cut {
+	return &cut{key: key}
+}
+
+//GetLines return slice of lines from file
+func (*cut) GetLines() ([]string, error) {
 	fileName := os.Args[len(os.Args) - 1]
 
 	file, err := os.Open(fileName)
@@ -24,13 +35,22 @@ func GetLines(key *key.Key) ([]string, error) {
 	return lines, nil
 }
 
-func GetFields(key *key.Key)
+//GetFields return list of specified fields
+func (c *cut) GetFields() []string {
+	index := make([]string, 0)
 
-func Cut(key *key.Key) {
-	lines, err := GetLines(key)
-	if err != nil {
-		return nil, fmt.Errorf("Error when get lines: %v", err)
+	for _, val := range c.key.Fields {
+		index = append(index, strings.Split(val, "-")...)
 	}
 
-	for 
+	return index
+}
+
+func (c *cut) Cut() {
+	// lines, err := GetLines(key)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("Error when get lines: %v", err)
+	// }
+
+	fmt.Println(c.GetFields())
 }
