@@ -5,13 +5,13 @@ import (
 	"log"
 	"os"
 	"github.com/spf13/cobra"
-	keypackage "grep/internal/key"
+	key "grep/internal/key"
 	grep "grep/internal/grep"
 )
 
 func main() {
 	cmd := &cobra.Command{}
-	key := keypackage.New()
+	key := key.New()
 
 	key.SetKeys(cmd)
 

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	keymodule "cut/internal/key"
+	key "cut/internal/key"
 	"log"
 	"os"
 	"github.com/spf13/cobra"
@@ -10,7 +10,7 @@ import (
 
 func main() {
 	cmd := &cobra.Command{}
-	key := keymodule.New()
+	key := key.New()
 
 	key.SetKeys(cmd, key)
 

@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+//New return instance of type Key
 func New() *Key {
 	return &Key{}
 }

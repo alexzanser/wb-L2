@@ -5,14 +5,14 @@ import (
 	"os"
 	"log"
 	"sort/internal/sort"
-	keypackage "sort/internal/key"
+	key "sort/internal/key"
 	"github.com/spf13/cobra"
 )
 
 
 func main() {
 	cmd := &cobra.Command{}
-	key := keypackage.New()
+	key := key.New()
 	key.SetKeys(cmd)
 	
 	if err := cmd.Execute(); err != nil || len(os.Args) < 2 {

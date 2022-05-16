@@ -24,7 +24,13 @@ func GetLines(key *key.Key) ([]string, error) {
 	return lines, nil
 }
 
+func GetFields(key *key.Key)
 
 func Cut(key *key.Key) {
+	lines, err := GetLines(key)
+	if err != nil {
+		return nil, fmt.Errorf("Error when get lines: %v", err)
+	}
 
+	for 
 }
