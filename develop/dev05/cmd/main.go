@@ -5,15 +5,15 @@ import (
 	"log"
 	"os"
 	"github.com/spf13/cobra"
-	keymodule"grep/internal/key"
+	keypackage "grep/internal/key"
 	grep "grep/internal/grep"
 )
 
 func main() {
 	cmd := &cobra.Command{}
-	key := &keymodule.Key{}
+	key := keypackage.New()
 
-	keymodule.InitKeys(cmd, key)
+	key.SetKeys(cmd)
 
 	if err := cmd.Execute(); err != nil || len(os.Args) < 2 {
 		log.Fatal(fmt.Errorf("required argument missing: %v", err))

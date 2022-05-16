@@ -4,6 +4,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+//New return instance of type Key
+func New() *Key {
+	return &Key{}
+}
+
 //Key is a struct for program flags received from cobra
 type Key struct {
 	After      int
@@ -19,7 +24,7 @@ type Key struct {
 }
 
 //InitKeys receives flags and set them to fields of struct Key
-func InitKeys(rootCmd *cobra.Command, key *Key) {
+func (key *Key) SetKeys(rootCmd *cobra.Command) {
 	rootCmd.Flags().IntVarP(&key.After, "after-context", "A", 0, "after-context")
 	rootCmd.Flags().IntVarP(&key.Before, "before-context", "B", 0, "before-context")
 	rootCmd.Flags().IntVarP(&key.Context, "context", "C", 0, "context")

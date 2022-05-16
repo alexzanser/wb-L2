@@ -84,7 +84,7 @@ func GetBorders(key *key.Key, idx int, len int) (int, int) {
 //UniqueOutput control removes overlaps in output
 func UniqueOutput(prevGroup, group *Group, idx int, out []string, lines [] string) []string  {
 	if len(group.index) == 0 && idx != 0 {
-		if Contains(prevGroup.index, group.left) == false{
+		if Contains(prevGroup.index, group.left) == false && idx != 0 {
 			out = append(out, "--")
 		}
 	}
@@ -123,7 +123,7 @@ func Grep(key *key.Key) ([]string, error) {
 				out = UniqueOutput(prevGroup, group, j, out, lines)
 			}
 		}
-		prevGroup.index = append(prevGroup.index, group.index...)
+		prevGroup.index = group.index
 		prevGroup.left, prevGroup.right = group.left, group.right
 	}
 
