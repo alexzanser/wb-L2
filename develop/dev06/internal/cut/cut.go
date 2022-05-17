@@ -5,6 +5,7 @@ import (
 	"cut/internal/key"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -36,21 +37,51 @@ func (*cut) GetLines() ([]string, error) {
 }
 
 //GetFields return list of specified fields
-func (c *cut) GetFields() []string {
+func (c *cut) GetFields() []int{
 	index := make([]string, 0)
 
 	for _, val := range c.key.Fields {
 		index = append(index, strings.Split(val, "-")...)
 	}
 
-	return index
+	indexInt := make([]int, 0)
+	for _, val := range index {
+		d, _ := strconv.Atoi(val) 
+		indexInt = append(indexInt, d)
+	}
+
+	return indexInt
 }
 
-func (c *cut) Cut() {
-	// lines, err := GetLines(key)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("Error when get lines: %v", err)
-	// }
+//contains check whether item is in slice or not
+func contains(lines []int, idx int) bool {
+	for _, a := range lines {
+		if a == idx {
+			return true
+		}
+	}
+	return false
+}
 
-	fmt.Println(c.GetFields())
+func (c *cut) Cut() ([]string, error) {
+	lines, err := c.GetLines()
+	if err != nil {
+		return nil, fmt.Errorf("Error when get lines: %v", err)
+	}
+
+	result := make([]string, 0)
+	var str strings.Builder
+	for _ , line := range lines {
+		if !c.key.Separated || strings.Contains(line, c.key.Delimiter) {
+			lineSplit := strings.Split(line, c.key.Delimiter)
+			for n, s := range lineSplit {
+				if contains(c.GetFields(), n + 1) {
+					str.WriteString(s + " ")
+				}
+			}
+			result = append(result, str.String()[:len(str.String()) - 1])
+			str.Reset()
+		}
+	}
+	return result, nil
 }
