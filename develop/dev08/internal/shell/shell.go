@@ -2,27 +2,33 @@ package shell
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"os"
+	"os/exec"
+	"os/signal"
 	"strconv"
 	"strings"
 	"syscall"
-	"os/exec"
+
 	ps "github.com/mitchellh/go-ps"
 )
 
 type Command struct {
-	cmd		string
-	args	string
+	cmd  string
+	args []string
 }
 
 type Shell struct {
-	commands[]Command
+	commands []Command
+	buf	 *bytes.Buffer
 }
 
 func New() *Shell {
-	return &Shell{}
+	var buf bytes.Buffer
+	return &Shell{buf: &buf}
 }
 
 func (s *Shell) GetCommands() {
@@ -30,15 +36,15 @@ func (s *Shell) GetCommands() {
 
 	fmt.Print("shell$ ")
 	line, _, _ := reader.ReadLine()
-	
+
 	for _, cmd := range strings.Split(string(line), "|") {
 		command := strings.Split(string(cmd), " ")
-		s.commands = append(s.commands, Command{cmd: command[0], args: strings.Join(command[1:], " ")})
+		s.commands = append(s.commands, Command{cmd: command[0], args: command[1:]})
 	}
 }
 
 func (s *Shell) ChangeDir(cmd Command) error {
-	path := strings.Split(cmd.args, " ")[0]
+	path := cmd.args[0]
 	if err := os.Chdir(path); err != nil {
 		return fmt.Errorf("error when change dir: %v", err)
 	}
@@ -61,7 +67,7 @@ func (s *Shell) Echo(cmd Command) {
 }
 
 func (s *Shell) Kill(cmd Command) error {
-	pid, err := strconv.Atoi(strings.Split(cmd.args, " ")[0])
+	pid, err := strconv.Atoi(cmd.args[0])
 	if err != nil {
 		return fmt.Errorf("incorrect PID: %v", err)
 	}
@@ -75,34 +81,45 @@ func (s *Shell) Kill(cmd Command) error {
 
 func (s *Shell) PS(cmd Command) error {
 	processes, err := ps.Processes()
-    if err != nil {
-        return fmt.Errorf("can't get processes list: %v", err)
-    }
+	if err != nil {
+		return fmt.Errorf("can't get processes list: %v", err)
+	}
 
 	for _, proc := range processes {
-        log.Printf("%d\t%s\n",proc.Pid(),proc.Executable())
-    }
+		log.Printf("%d\t%s\n", proc.Pid(), proc.Executable())
+	}
 
 	return nil
 }
 
 func (s *Shell) Exec(cmd Command) error {
-	exec := exec.Command(cmd.cmd, strings.Split(cmd.args, " ")...)
-	stdout, err := exec.StdoutPipe()
-	if err != nil {
-		log.Fatal(err)
-	}
+	exec := exec.Command(cmd.cmd, cmd.args...)
+	stdout, _ := exec.StdoutPipe()
+
 	if err := exec.Start(); err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("can't start executable: %v", err)
+	}
+
+	sigquit := make(chan os.Signal, 1)
+	go func () {
+		signal.Notify(sigquit, syscall.SIGINT, syscall.SIGTERM)
+		select {
+		case <- sigquit:
+			exec.Process.Kill()
+		}
+	}()
+
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		fmt.Fprintln(s.buf, scanner.Text())
 	}
 	
-	scanner := bufio.NewScanner(stdout)
-	for scanner.Scan()  {
-		fmt.Println(scanner.Text())
-	}
 	if err := exec.Wait(); err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("executable failed: %v", err)
 	}
+
+	close(sigquit)
+	defer signal.Reset()
 
 	return nil
 }
@@ -110,7 +127,7 @@ func (s *Shell) Exec(cmd Command) error {
 func (s *Shell) ExecCommands() error {
 	var err error
 
-	for _, cmd := range s.commands {
+	for i, cmd := range s.commands {
 		switch cmd.cmd {
 		case "cd":
 			err = s.ChangeDir(cmd)
@@ -122,12 +139,19 @@ func (s *Shell) ExecCommands() error {
 			err = s.Kill(cmd)
 		case "ps":
 			err = s.PS(cmd)
+		case "exit":
+			os.Exit(0)
 		default:
 			err = s.Exec(cmd)
 		}
+
+		if s.commands[i + 1].cmd != "|" {
+			out, _ := s.buf.ReadLi
+			fmt.Println(string(out))
+		}
 		if err != nil {
 			return fmt.Errorf("error when exec command: %v", err)
-		} 
+		}
 	}
 
 	return nil
