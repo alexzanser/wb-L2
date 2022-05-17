@@ -87,13 +87,23 @@ func (s *Shell) PS(cmd Command) error {
 }
 
 func (s *Shell) Exec(cmd Command) error {
-	exec := exec.Command(cmd.cmd)
-	// if err != nil {
-	// 	return fmt.Errorf("error when exec command: %v", err)
-	// }
+	exec := exec.Command(cmd.cmd, strings.Split(cmd.args, " ")...)
+	stdout, err := exec.StdoutPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := exec.Start(); err != nil {
+		log.Fatal(err)
+	}
+	
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan()  {
+		fmt.Println(scanner.Text())
+	}
+	if err := exec.Wait(); err != nil {
+		log.Fatal(err)
+	}
 
-	out , _ := exec.Output()
-	fmt.Println(string(out))
 	return nil
 }
 
