@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func merge(channels ...<-chan interface{}) <-chan interface{} {
+func or(channels ...<-chan interface{}) <-chan interface{} {
 	var wg sync.WaitGroup
 	or := make(chan interface{})
 
@@ -41,7 +41,7 @@ func main() {
 	}
 
 	start := time.Now()
-	<-merge(
+	<-or(
 		sig(2*time.Hour),
 		sig(5*time.Minute),
 		sig(1*time.Second),
