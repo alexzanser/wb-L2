@@ -88,13 +88,12 @@ func (s *Shell) PS(cmd Command) error {
 
 func (s *Shell) Exec(cmd Command) error {
 	exec := exec.Command(cmd.cmd)
+	// if err != nil {
+	// 	return fmt.Errorf("error when exec command: %v", err)
+	// }
 
-	err := exec.Start()
-	if err != nil {
-		return fmt.Errorf("error when exec command: %v", err)
-	}
-
-	fmt.Println(exec.CombinedOutput())
+	out , _ := exec.Output()
+	fmt.Println(string(out))
 	return nil
 }
 
