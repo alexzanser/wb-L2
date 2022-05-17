@@ -20,7 +20,7 @@ func New(key *key.Key) *cut {
 
 //GetLines return slice of lines from file
 func (*cut) GetLines() ([]string, error) {
-	fileName := os.Args[len(os.Args) - 1]
+	fileName := os.Args[len(os.Args)-1]
 
 	file, err := os.Open(fileName)
 	if err != nil {
@@ -37,7 +37,7 @@ func (*cut) GetLines() ([]string, error) {
 }
 
 //GetFields return list of specified fields
-func (c *cut) GetFields() []int{
+func (c *cut) GetFields() []int {
 	index := make([]string, 0)
 
 	for _, val := range c.key.Fields {
@@ -46,7 +46,7 @@ func (c *cut) GetFields() []int{
 
 	indexInt := make([]int, 0)
 	for _, val := range index {
-		d, _ := strconv.Atoi(val) 
+		d, _ := strconv.Atoi(val)
 		indexInt = append(indexInt, d)
 	}
 
@@ -63,6 +63,7 @@ func contains(lines []int, idx int) bool {
 	return false
 }
 
+//Cut split input lines and chose needed columns
 func (c *cut) Cut() ([]string, error) {
 	lines, err := c.GetLines()
 	if err != nil {
@@ -70,18 +71,18 @@ func (c *cut) Cut() ([]string, error) {
 	}
 
 	result := make([]string, 0)
-	var str strings.Builder
-	for _ , line := range lines {
-		if !c.key.Separated || strings.Contains(line, c.key.Delimiter) {
-			lineSplit := strings.Split(line, c.key.Delimiter)
-			for n, s := range lineSplit {
-				if contains(c.GetFields(), n + 1) {
+	str := strings.Builder{}
+	for _, line := range lines {
+		str.Reset()
+		if c.key.Separated == false || strings.Contains(line, c.key.Delimiter) {
+			for i, s := range strings.Split(line, c.key.Delimiter) {
+				if contains(c.GetFields(), i+1) {
 					str.WriteString(s + " ")
 				}
 			}
-			result = append(result, str.String()[:len(str.String()) - 1])
-			str.Reset()
+			result = append(result, str.String()[:len(str.String())-1])
 		}
 	}
+
 	return result, nil
 }
