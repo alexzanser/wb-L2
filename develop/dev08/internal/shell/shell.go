@@ -3,8 +3,12 @@ package shell
 import (
 	"bufio"
 	"bytes"
+
+	// "bytes"
 	"fmt"
 	"io"
+
+	// "io"
 	"log"
 	"os"
 	"os/exec"
@@ -23,12 +27,12 @@ type Command struct {
 
 type Shell struct {
 	commands []Command
-	buf	 *bytes.Buffer
+	input	*io.PipeReader
+	output	*io.PipeWriter
 }
 
 func New() *Shell {
-	var buf bytes.Buffer
-	return &Shell{buf: &buf}
+	return &Shell{}
 }
 
 func (s *Shell) GetCommands() {
@@ -38,6 +42,7 @@ func (s *Shell) GetCommands() {
 	line, _, _ := reader.ReadLine()
 
 	for _, cmd := range strings.Split(string(line), "|") {
+		cmd = strings.Trim(cmd,  " ")
 		command := strings.Split(string(cmd), " ")
 		s.commands = append(s.commands, Command{cmd: command[0], args: command[1:]})
 	}
@@ -57,13 +62,16 @@ func (s *Shell) PWD() error {
 	if err != nil {
 		return fmt.Errorf("error when get PWD: %v", err)
 	}
-	fmt.Println(dir)
+	fmt.Fprintln(s.output, dir)
 
 	return nil
 }
 
 func (s *Shell) Echo(cmd Command) {
-	fmt.Println(cmd.args)
+	go func() {
+		defer s.output.Close()
+		fmt.Fprintln(s.output, strings.Join(cmd.args, " "))
+	}()
 }
 
 func (s *Shell) Kill(cmd Command) error {
@@ -86,20 +94,22 @@ func (s *Shell) PS(cmd Command) error {
 	}
 
 	for _, proc := range processes {
-		log.Printf("%d\t%s\n", proc.Pid(), proc.Executable())
+		fmt.Fprintf(s.output, "%d\t%s\n", proc.Pid(), proc.Executable())
 	}
 
 	return nil
 }
 
 func (s *Shell) Exec(cmd Command) error {
+	defer s.output.Close()
 	exec := exec.Command(cmd.cmd, cmd.args...)
-	stdout, _ := exec.StdoutPipe()
+	
+	exec.Stdout = s.output
 
 	if err := exec.Start(); err != nil {
 		return fmt.Errorf("can't start executable: %v", err)
 	}
-
+	
 	sigquit := make(chan os.Signal, 1)
 	go func () {
 		signal.Notify(sigquit, syscall.SIGINT, syscall.SIGTERM)
@@ -109,11 +119,6 @@ func (s *Shell) Exec(cmd Command) error {
 		}
 	}()
 
-	scanner := bufio.NewScanner(stdout)
-	for scanner.Scan() {
-		fmt.Fprintln(s.buf, scanner.Text())
-	}
-	
 	if err := exec.Wait(); err != nil {
 		return fmt.Errorf("executable failed: %v", err)
 	}
@@ -127,7 +132,14 @@ func (s *Shell) Exec(cmd Command) error {
 func (s *Shell) ExecCommands() error {
 	var err error
 
-	for i, cmd := range s.commands {
+	buffer := new(bytes.Buffer)
+	for _ , cmd := range s.commands {
+		s.input, s.output = io.Pipe()
+		go func () {
+			defer s.output.Close()
+			fmt.Fprint(s.output, buffer.String())
+		}()
+		buffer.Reset()
 		switch cmd.cmd {
 		case "cd":
 			err = s.ChangeDir(cmd)
@@ -142,16 +154,17 @@ func (s *Shell) ExecCommands() error {
 		case "exit":
 			os.Exit(0)
 		default:
-			err = s.Exec(cmd)
+			go s.Exec(cmd)
 		}
+		
 
-		if s.commands[i + 1].cmd != "|" {
-			out, _ := s.buf.ReadLi
-			fmt.Println(string(out))
-		}
+		buffer.ReadFrom(s.input)
+		fmt.Print(buffer.String(), "AAA")
+
 		if err != nil {
 			return fmt.Errorf("error when exec command: %v", err)
 		}
+		
 	}
 
 	return nil
