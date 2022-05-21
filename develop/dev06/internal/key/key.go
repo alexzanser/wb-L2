@@ -17,7 +17,7 @@ type Key struct {
 
 }
 
-//InitKeys receives flags and set them to fields of struct Key
+//SetKeys receives flags and set them to fields of struct Key
 func (key *Key) SetKeys(rootCmd *cobra.Command) {
 	rootCmd.Flags().StringSliceVarP(&key.Fields, "fields", "f", nil, "fields")
 	rootCmd.Flags().StringVarP(&key.Delimiter, "delimeter", "d", "\t", "delimiter")

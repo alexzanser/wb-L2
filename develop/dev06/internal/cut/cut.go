@@ -9,17 +9,18 @@ import (
 	"strings"
 )
 
-type cut struct {
+//Cut structure
+type Cut struct {
 	key *key.Key
 }
 
 //New returns instance of type cut
-func New(key *key.Key) *cut {
-	return &cut{key: key}
+func New(key *key.Key) *Cut {
+	return &Cut{key: key}
 }
 
 //GetLines return slice of lines from file
-func (*cut) GetLines() ([]string, error) {
+func (*Cut) GetLines() ([]string, error) {
 	fileName := os.Args[len(os.Args)-1]
 
 	file, err := os.Open(fileName)
@@ -37,7 +38,7 @@ func (*cut) GetLines() ([]string, error) {
 }
 
 //GetFields return list of specified fields
-func (c *cut) GetFields() []int {
+func (c *Cut) GetFields() []int {
 	index := make([]string, 0)
 
 	for _, val := range c.key.Fields {
@@ -64,7 +65,7 @@ func contains(lines []int, idx int) bool {
 }
 
 //Cut split input lines and chose needed columns
-func (c *cut) Cut() ([]string, error) {
+func (c *Cut) Cut() ([]string, error) {
 	lines, err := c.GetLines()
 	if err != nil {
 		return nil, fmt.Errorf("Error when get lines: %v", err)

@@ -3,12 +3,8 @@ package shell
 import (
 	"bufio"
 	"bytes"
-
-	// "bytes"
 	"fmt"
 	"io"
-
-	// "io"
 	"log"
 	"os"
 	"os/exec"
@@ -16,26 +12,32 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-
 	ps "github.com/mitchellh/go-ps"
 )
 
+//Command struct
 type Command struct {
 	cmd  string
 	args []string
 }
 
+//Shell struct
 type Shell struct {
 	commands []Command
-	input	*io.PipeReader
-	output	*io.PipeWriter
+	input	*bytes.Buffer
+	output	*bytes.Buffer
+	out		io.Writer
+
 }
 
+//New return *Shell instance
 func New() *Shell {
 	return &Shell{}
 }
 
+//GetCommands return list of commands
 func (s *Shell) GetCommands() {
+	s.commands = make([]Command, 0)
 	reader := bufio.NewReader(os.Stdin)
 
 	fmt.Print("shell$ ")
@@ -44,10 +46,14 @@ func (s *Shell) GetCommands() {
 	for _, cmd := range strings.Split(string(line), "|") {
 		cmd = strings.Trim(cmd,  " ")
 		command := strings.Split(string(cmd), " ")
+		if command[0] == "top" {
+			command = append(command, "-b")
+		}
 		s.commands = append(s.commands, Command{cmd: command[0], args: command[1:]})
 	}
 }
 
+//ChangeDir changes directory
 func (s *Shell) ChangeDir(cmd Command) error {
 	path := cmd.args[0]
 	if err := os.Chdir(path); err != nil {
@@ -57,23 +63,23 @@ func (s *Shell) ChangeDir(cmd Command) error {
 	return nil
 }
 
+//PWD shows current directory
 func (s *Shell) PWD() error {
 	dir, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("error when get PWD: %v", err)
 	}
-	fmt.Fprintln(s.output, dir)
+	fmt.Fprintln(s.out, dir)
 
 	return nil
 }
 
+//Echo print info to stdin
 func (s *Shell) Echo(cmd Command) {
-	go func() {
-		defer s.output.Close()
-		fmt.Fprintln(s.output, strings.Join(cmd.args, " "))
-	}()
+	fmt.Fprintln(s.out, strings.Join(cmd.args, " "))
 }
 
+//Kill process
 func (s *Shell) Kill(cmd Command) error {
 	pid, err := strconv.Atoi(cmd.args[0])
 	if err != nil {
@@ -87,6 +93,7 @@ func (s *Shell) Kill(cmd Command) error {
 	return nil
 }
 
+//PS shows list of running processes
 func (s *Shell) PS(cmd Command) error {
 	processes, err := ps.Processes()
 	if err != nil {
@@ -94,17 +101,18 @@ func (s *Shell) PS(cmd Command) error {
 	}
 
 	for _, proc := range processes {
-		fmt.Fprintf(s.output, "%d\t%s\n", proc.Pid(), proc.Executable())
+		fmt.Fprintf(s.out, "%d\t%s\n", proc.Pid(), proc.Executable())
 	}
 
 	return nil
 }
 
+//Exec executes binary files
 func (s *Shell) Exec(cmd Command) error {
-	defer s.output.Close()
 	exec := exec.Command(cmd.cmd, cmd.args...)
-	
-	exec.Stdout = s.output
+
+	exec.Stdout = s.out
+	exec.Stdin = s.input
 
 	if err := exec.Start(); err != nil {
 		return fmt.Errorf("can't start executable: %v", err)
@@ -129,17 +137,19 @@ func (s *Shell) Exec(cmd Command) error {
 	return nil
 }
 
+//ExecCommands select mode fo command to run
 func (s *Shell) ExecCommands() error {
 	var err error
 
-	buffer := new(bytes.Buffer)
-	for _ , cmd := range s.commands {
-		s.input, s.output = io.Pipe()
-		go func () {
-			defer s.output.Close()
-			fmt.Fprint(s.output, buffer.String())
-		}()
-		buffer.Reset()
+	s.input = new(bytes.Buffer)
+	s.output = new(bytes.Buffer)
+	s.out = s.output
+	for i , cmd := range s.commands {
+
+		if i == len(s.commands) - 1 {
+			s.out = os.Stdin
+		}
+
 		switch cmd.cmd {
 		case "cd":
 			err = s.ChangeDir(cmd)
@@ -154,31 +164,26 @@ func (s *Shell) ExecCommands() error {
 		case "exit":
 			os.Exit(0)
 		default:
-			go s.Exec(cmd)
-		}
-		
-
-		buffer.ReadFrom(s.input)
-		fmt.Print(buffer.String(), "AAA")
+			err = s.Exec(cmd)
+		}		
 
 		if err != nil {
 			return fmt.Errorf("error when exec command: %v", err)
 		}
-		
-	}
 
+		s.input.ReadFrom(s.output)
+	}
 	return nil
 }
 
+//Run launch shell
 func (s *Shell) Run() {
 	for {
 		s.GetCommands()
 		if s.commands[0].cmd != "" {
-			err := s.ExecCommands()
-			if err != nil {
+			if err := s.ExecCommands(); err != nil {
 				log.Println(fmt.Errorf("error: %v", err))
 			}
 		}
-		s.commands = nil
 	}
 }
