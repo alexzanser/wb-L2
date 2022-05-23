@@ -12,6 +12,7 @@ import (
 )
 
 type Wget struct {
+	basePath		string
 	links			[]string
 	client			*http.Client
 	collector		*colly.Collector
@@ -26,10 +27,9 @@ func New() *Wget {
 }
 
 func getPath(url string) string {
-	dir := strings.TrimLeft(path.Dir(url), "https:")
-	dir = strings.TrimLeft(dir, "http:")
-	dir = strings.TrimLeft(dir, "/")
-
+	dir := strings.TrimPrefix(url, "https://")
+	dir = strings.TrimPrefix(dir, "http://")
+	fmt.Println(dir)
 	return  dir
 }
 
