@@ -12,7 +12,7 @@ import (
 )
 
 type Wget struct {
-	basePath		string
+	BasePath		string
 	links			[]string
 	client			*http.Client
 	collector		*colly.Collector
@@ -60,9 +60,9 @@ func (wget *Wget) GetPage(url string) error {
 		return fmt.Errorf("error when send request: %v", err)
 	}
 
-	createDir(getPath(url))
+	createDir(wget.BasePath + getPath(url))
 
-	file, err  := os.Create(wget.basePath + getPath(url) + "/" + getFileName(url))
+	file, err  := os.Create(wget.BasePath + getPath(url) + "/" + getFileName(url))
 
 	if err != nil {
 		return fmt.Errorf("error when create file: %v", err)
