@@ -1,4 +1,4 @@
-package main
+package wget
 
 import (
 	"fmt"
@@ -62,7 +62,7 @@ func (wget *Wget) GetPage(url string) error {
 
 	createDir(getPath(url))
 
-	file, err  := os.Create(getPath(url) + "/" + getFileName(url))
+	file, err  := os.Create(wget.basePath + getPath(url) + "/" + getFileName(url))
 
 	if err != nil {
 		return fmt.Errorf("error when create file: %v", err)
@@ -86,7 +86,3 @@ func (wget *Wget) VisitAndGet(url string) {
 	c.Visit(url)
  }
  
-func main() {
-	wget := New()
-	wget.VisitAndGet("https://stackoverflow.com/questions/23166468/how-can-i-get-stdin-to-exec-cmd-in-golang")
-}
