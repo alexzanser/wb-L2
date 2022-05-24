@@ -2,77 +2,64 @@ package test
 
 import (
 	"testing"
-	"github.com/spf13/cobra"
-	"sort/internal/sort"
-	"strings"
-	linesmodule "sort/internal/lines"
+	"os/exec"
+	"reflect"
+	"fmt"
 )
 
 var TestCases = []struct {
-	input 	string
-	flags	string
-	output	string
+	args	[]string
 }{
 	{
-		"../files/file1.txt",
-		"",
-`1 D
-2.18 C
-3.14 B
-3.4 A
-5.11
-ABC 1
-DEF 2
-PPP 3
-ZZZ 7
-\\\ 0`,
+		[]string{"../files/file1.txt"},
 	},
+
 	{
-		"../files/file2.txt",
-		"-M -r",
-`dec
-nov
-oct
-sep
-july
-june
-feb`,
+		[]string{"../files/file1.txt", "-r"},
 	},
+
 	{
-		"../files/file3.txt",
-		"-h -r",
-`3AC
-3AAC
-3AAB    
-2B
-2B
-1A              `,
+		[]string{"../files/file1.txt", "-k", "1"},
+	},
+
+	{
+		[]string{"../files/file1.txt", "-r", "-u"},
+	},
+
+	{
+		[]string{"../files/file2.txt", "-n", "-r"},
+	},
+
+	{
+		[]string{"../files/file2.txt", "-n", "-b"},
+	},
+
+	{
+		[]string{"../files/file2.txt", "-n", "-M"},
+	},
+
+	{
+		[]string{"../files/file2.txt", "-h"},
+	},
+
+	{
+		[]string{"../files/file3.txt", "-h", "-r"},
+	},
+
+	{
+		[]string{"../files/file3.txt", "-n"},
 	},
 }
 
 func Test(t *testing.T) {
-	cmd := &cobra.Command{}
-	key := &sort.Key{}
-
-	sort.InitKeys(cmd, key)
-
 	for _, test := range TestCases {
-		cmd.ParseFlags(strings.Split(test.flags, " "))
-		_ = cmd.Execute()
-	
-		lines, _ := linesmodule.GetLines(test.input)
-		sort.Sort(lines, key)
-	
-		var sb strings.Builder
-		for i, line := range lines {
-			sb.WriteString((line[1]))
-			if i != len(lines) - 1 {
-				sb.WriteString("\n")
-			}
-		}
+		out1, _  := exec.Command("./sort_go", test.args...).Output()
+		out2, _  := exec.Command("sort", test.args...).Output()
 
-		if sb.String() != test.output {
+		if reflect.DeepEqual(out1, out2) == false {
 			t.Error("test failed")
+			fmt.Println(string(out1))
+			fmt.Println(string(out2))
 		}
 	}
 }
