@@ -38,6 +38,19 @@ var TestCases = []struct {
 		[]string{"A", "../files/file3.txt", "-A", "2", "-B", "2", "-i", "-c"},
 	},
 
+	{
+		[]string{"A", "../files/file3.txt", "-C", "1", "-B", "2", "-c", "-i"},
+	},
+
+	{
+		[]string{"A", "../files/file3.txt", "-C", "3", "-B", "5", "-i"},
+	},
+
+	{
+		[]string{"A", "../files/file3.txt", "-C", "4", "-B", "2", "-i", "-c"},
+	},
+
+
 }
 
 func Test(t *testing.T) {
