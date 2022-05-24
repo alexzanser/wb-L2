@@ -1,6 +1,5 @@
-1A              
-2B
-2B
-3AAB    
-3AC
-3AAC
+“At the time, no single team member knew Go, but within a month,
+everyone was writing in Go and we were building out the endpoints.
+It was the flexibility, how easy it was to use, and the really cool concept behind Go
+(how Go handles native concurrency, garbage collection, and of course safety+speed.)
+that helped engage us during the build. Also, who can beat that cute mascot!”

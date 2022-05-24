@@ -78,7 +78,7 @@ func (c *Cut) Cut() ([]string, error) {
 		if c.key.Separated == false || strings.Contains(line, c.key.Delimiter) {
 			for i, s := range strings.Split(line, c.key.Delimiter) {
 				if contains(c.GetFields(), i+1) {
-					str.WriteString(s + " ")
+					str.WriteString(s + c.key.Delimiter)
 				}
 			}
 			result = append(result, str.String()[:len(str.String())-1])
