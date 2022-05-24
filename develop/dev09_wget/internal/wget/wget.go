@@ -26,18 +26,18 @@ func New() *Wget {
 	}
 }
 
-func getPath(url string) string {
+func (wget *Wget) GetPath(url string) string {
 	dir := strings.TrimPrefix(url, "https://")
 	dir = strings.TrimPrefix(dir, "http://")
 	fmt.Println(dir)
-	return  dir
+	return  wget.BasePath + "/" + dir
 }
 
-func getFileName(url string) string {
-	return path.Base(url)
+func (wget *Wget) GetFileName(url string) string {
+	return wget.GetPath(url) + "/" + path.Base(url)
 }
 
-func createDir(path string) error {
+func (wget *Wget) CreateDir(path string) error {
 	return os.MkdirAll(path, os.ModePerm)
 }
 
@@ -54,10 +54,9 @@ func (wget *Wget) GetPage(url string) error {
 		return fmt.Errorf("error when send request: %v", err)
 	}
 
-	createDir(wget.BasePath + "/"+ getPath(url))
-
-	file, err  := os.Create(wget.BasePath + "/" + getPath(url) + "/" + getFileName(url))
-
+	wget.CreateDir(wget.GetPath(url))
+	
+	file, err  := os.Create(wget.GetFileName(url))
 	if err != nil {
 		return fmt.Errorf("error when create file: %v", err)
 	}
