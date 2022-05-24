@@ -7,7 +7,7 @@ import (
 	"os"
 	"path"
 	"strings"
-
+	"log"
 	"github.com/gocolly/colly"
 )
 
@@ -34,13 +34,7 @@ func getPath(url string) string {
 }
 
 func getFileName(url string) string {
-	fname := path.Base(url)
-	if strings.Contains(fname, ".") {
-		if strings.Index(fname, "?v=") != -1 {
-			return fname[:strings.Index(fname, "?v=")]
-		}
-	}
-	return fname
+	return path.Base(url)
 }
 
 func createDir(path string) error {
@@ -86,3 +80,16 @@ func (wget *Wget) VisitAndGet(url string) {
 	c.Visit(url)
  }
  
+ func (wget *Wget) Start() {
+	if len(os.Args) < 2 {
+		log.Fatal("wget: missing URL")
+	}
+
+	url := os.Args[1]
+
+	if len(os.Args) == 3 {
+		wget.BasePath = os.Args[2]
+	}
+
+	wget.VisitAndGet(url)
+ }
