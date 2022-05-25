@@ -2,5 +2,11 @@ package repository
 
 
 type Repository struct {
-	calendar	Calendar
-} 
+	Calendar	Calendar
+}
+
+func New() *Repository {
+	return &Repository{
+		Calendar: NewCalendar(),
+	}
+}

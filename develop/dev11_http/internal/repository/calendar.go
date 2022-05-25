@@ -9,9 +9,9 @@ import (
 )
 
 type Calendar interface {
-	CreateEvent() error
-	UpdateEvent() error
-	DeleteEvent() error
+	CreateEvent(ev *domain.Event) error
+	UpdateEvent(ev *domain.Event) error
+	DeleteEvent(id string) error
 	GetEventForDay(userID string, date *time.Time) []domain.Event
 	GetEventForWeek(userID string, date *time.Time) []domain.Event
 	GetEventForMonth(userID string, date *time.Time) []domain.Event
@@ -22,9 +22,10 @@ type calendar struct {
 	*sync.RWMutex
 }
 
-func New() Calendar {
+func NewCalendar() Calendar {
 	return &calendar{
 		Events: make(map[string]domain.Event),
+		RWMutex: &sync.RWMutex{},
 	}
 }
 
@@ -38,7 +39,7 @@ func ValidEvent(ev *domain.Event) error {
 
 func (c *calendar) CreateEvent(ev *domain.Event) error {
 	if err := ValidEvent(ev); err != nil {
-		return fmt.Errorf("invalid event: ", err)
+		return fmt.Errorf("invalid event: %v", err)
 	}
 
 	c.RLock()
@@ -46,29 +47,28 @@ func (c *calendar) CreateEvent(ev *domain.Event) error {
 		c.RUnlock()
 		return fmt.Errorf("event with id=%s already exists", ev.ID)
 	}
-
+	c.RUnlock()
 	c.Lock()
-	c.Events[ev.ID] = ev
+	c.Events[ev.ID] = *ev
 	c.Unlock()
 	return nil
 }
 
 func (c *calendar) UpdateEvent(ev *domain.Event) error {
 	if err := ValidEvent(ev); err != nil {
-		return fmt.Errorf("invalid event: ", err)
+		return fmt.Errorf("invalid event: %v", err)
 	}
 
 	c.RLock()
-	if _, ok := c.Events[ev.id]; ok {
+	if _, ok := c.Events[ev.ID]; ok {
 		c.RUnlock()
-		if reflect.DeepEqual(c.Events[ev.id], ev) {
+		if reflect.DeepEqual(c.Events[ev.ID], ev) {
 			return fmt.Errorf("no changes to update")
-
-			c.Lock()
-			c.Events[ev.ID] = ev.ID
-			c.Unlock()
-			return nil
 		}
+		c.Lock()
+		c.Events[ev.ID] = *ev
+		c.Unlock()
+		return nil
 	}
 
 	return fmt.Errorf("no event with id=%s exist, update declined", ev.ID)
@@ -80,11 +80,10 @@ func (c *calendar) DeleteEvent(id string) error {
 	if _, ok := c.Events[id]; ok {
 		c.RUnlock()
 
-		c.Lock()
 		delete(c.Events, id)
-		c.Unlock()
 		return nil
 	}
+	c.RUnlock()
 
 	return fmt.Errorf("no event with id=%s exist, delete declined", id)
 }
