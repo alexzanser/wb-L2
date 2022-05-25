@@ -11,6 +11,7 @@ import (
 	"github.com/gocolly/colly"
 )
 
+//Wget main structure
 type Wget struct {
 	BasePath		string
 	links			[]string
@@ -18,6 +19,7 @@ type Wget struct {
 	collector		*colly.Collector
 }
 
+//New return instance of *Wget
 func New() *Wget {
 	return &Wget{
 		links: []string{},
@@ -26,6 +28,7 @@ func New() *Wget {
 	}
 }
 
+//GetPath cut path from url
 func (wget *Wget) GetPath(url string) string {
 	dir := strings.TrimPrefix(url, "https://")
 	dir = strings.TrimPrefix(dir, "http://")
@@ -33,14 +36,17 @@ func (wget *Wget) GetPath(url string) string {
 	return  wget.BasePath + "/" + dir
 }
 
+//GetFileName cut file name from url
 func (wget *Wget) GetFileName(url string) string {
 	return wget.GetPath(url) + "/" + path.Base(url)
 }
 
+//CreateDir makes dir
 func (wget *Wget) CreateDir(path string) error {
 	return os.MkdirAll(path, os.ModePerm)
 }
 
+//GetPage download and copy file
 func (wget *Wget) GetPage(url string) error {
 	c := http.Client{}
 
@@ -65,6 +71,7 @@ func (wget *Wget) GetPage(url string) error {
 	return nil
 }
 
+//VisitAndGet uses colly for gettint list of url and visiting it
 func (wget *Wget) VisitAndGet(url string) {
 	c := colly.NewCollector()
   
@@ -79,6 +86,7 @@ func (wget *Wget) VisitAndGet(url string) {
 	c.Visit(url)
  }
  
+ //Start wget
  func (wget *Wget) Start() {
 	if len(os.Args) < 2 {
 		log.Fatal("wget: missing URL")

@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+//Calendar interface list methods for working with Event type
 type Calendar interface {
 	CreateEvent(ev *domain.Event) error
 	UpdateEvent(ev *domain.Event) error
@@ -22,6 +23,7 @@ type calendar struct {
 	*sync.RWMutex
 }
 
+//NewCalendar return instance of type calendar which implements Calendar interface
 func NewCalendar() Calendar {
 	return &calendar{
 		Events: make(map[string]domain.Event),
@@ -29,7 +31,7 @@ func NewCalendar() Calendar {
 	}
 }
 
-func ValidEvent(ev *domain.Event) error {
+func validEvent(ev *domain.Event) error {
 	if ev.Date.IsZero() {
 		return fmt.Errorf("empty date")
 	}
@@ -38,7 +40,7 @@ func ValidEvent(ev *domain.Event) error {
 }
 
 func (c *calendar) CreateEvent(ev *domain.Event) error {
-	if err := ValidEvent(ev); err != nil {
+	if err := validEvent(ev); err != nil {
 		return fmt.Errorf("invalid event: %v", err)
 	}
 
@@ -55,7 +57,7 @@ func (c *calendar) CreateEvent(ev *domain.Event) error {
 }
 
 func (c *calendar) UpdateEvent(ev *domain.Event) error {
-	if err := ValidEvent(ev); err != nil {
+	if err := validEvent(ev); err != nil {
 		return fmt.Errorf("invalid event: %v", err)
 	}
 

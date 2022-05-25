@@ -9,13 +9,15 @@ import (
 	"net/http"
 )
 
-type calendarHandler struct {
+//CalendarHandler is a concrete structure that implements Handler methods
+type CalendarHandler struct {
 	repo *repository.Repository
 }
 
-func NewCalendarHandler() *calendarHandler {
-	return &calendarHandler{
-		repo: repository.New(),
+//NewCalendarHandler return new instance of calendarHandler
+func NewCalendarHandler() *CalendarHandler {
+	return &CalendarHandler{
+		repo: repository.NewRepository(),
 	}
 }
 
@@ -29,7 +31,8 @@ func renderJSON(w http.ResponseWriter, v interface{}) {
 	w.Write(js)
 }
 
-func (c *calendarHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
+//CreateEvent creates new calendar event
+func (c *CalendarHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
 
@@ -70,7 +73,8 @@ func (c *calendarHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	renderJSON(w, OkResponse{Result: fmt.Sprintf("new event with id %s created", ev.ID)})
 }
 
-func (c *calendarHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
+//UpdateEvent updates existing event
+func (c *CalendarHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
 
@@ -111,7 +115,8 @@ func (c *calendarHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	renderJSON(w, OkResponse{Result: fmt.Sprintf("event with id %s updated", ev.ID)})
 }
 
-func (c *calendarHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
+//DeleteEvent deletes event
+func (c *CalendarHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
 
@@ -152,7 +157,8 @@ func (c *calendarHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	renderJSON(w, OkResponse{Result: fmt.Sprintf("event with id %s deleted", ev.ID)})
 }
 
-func (c *calendarHandler) GetEventForDay(w http.ResponseWriter, r *http.Request) {
+//GetEventForDay return list of events on a given day
+func (c *CalendarHandler) GetEventForDay(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
 
@@ -189,7 +195,8 @@ func (c *calendarHandler) GetEventForDay(w http.ResponseWriter, r *http.Request)
 	renderJSON(w, OkResponse{Result: events})
 }
 
-func (c *calendarHandler) GetEventForWeek(w http.ResponseWriter, r *http.Request) {
+//GetEventForWeek return list of events on a given week
+func (c *CalendarHandler) GetEventForWeek(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
 
@@ -226,7 +233,8 @@ func (c *calendarHandler) GetEventForWeek(w http.ResponseWriter, r *http.Request
 	renderJSON(w, OkResponse{Result: events})
 }
 
-func (c *calendarHandler) GetEventForMonth(w http.ResponseWriter, r *http.Request) {
+//GetEventForMonth return list of events on a given month
+func (c *CalendarHandler) GetEventForMonth(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
 
