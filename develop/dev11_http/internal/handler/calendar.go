@@ -7,6 +7,7 @@ import (
 	"http_server/internal/repository"
 	"mime"
 	"net/http"
+	"time"
 )
 
 //CalendarHandler is a concrete structure that implements Handler methods
@@ -19,6 +20,14 @@ func NewCalendarHandler() *CalendarHandler {
 	return &CalendarHandler{
 		repo: repository.NewRepository(),
 	}
+}
+
+type OkResponse struct {
+	Result string `json:"result"`
+}
+
+type EventResponse struct {
+	Result []domain.Event `json:"result"`
 }
 
 func renderJSON(w http.ResponseWriter, v interface{}) {
@@ -36,12 +45,12 @@ func checkMediaType(w http.ResponseWriter, r *http.Request) bool {
 	mediatype, _, err := mime.ParseMediaType(contentType)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf(`{"error": "%v"}`, err.Error()), http.StatusBadRequest)
 		return false
 	}
 
 	if mediatype != "application/json" {
-		http.Error(w, "expect application/json Content-Type", http.StatusUnsupportedMediaType)
+		http.Error(w, `{"error": "expect application/json Content-Type"}`, http.StatusUnsupportedMediaType)
 		return false
 	}
 
@@ -61,17 +70,13 @@ func (c *CalendarHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	var ev domain.Event
 
 	if err := dec.Decode(&ev); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf(`{"error": "%v"}`, err.Error()), http.StatusBadRequest)
 		return
 	}
 
 	if err := c.repo.Calendar.CreateEvent(&ev); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf(`{"error": "%v"}`, err.Error()), http.StatusInternalServerError)
 		return
-	}
-
-	type OkResponse struct {
-		Result string `json:"result"`
 	}
 
 	renderJSON(w, OkResponse{Result: fmt.Sprintf("new event with id %s created", ev.ID)})
@@ -89,17 +94,13 @@ func (c *CalendarHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	var ev domain.Event
 
 	if err := dec.Decode(&ev); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf(`{"error": "%v"}`, err.Error()), http.StatusBadRequest)
 		return
 	}
 
 	if err := c.repo.Calendar.UpdateEvent(&ev); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf(`{"error": "%v"}`, err.Error()), http.StatusInternalServerError)
 		return
-	}
-
-	type OkResponse struct {
-		Result string `json:"result"`
 	}
 
 	renderJSON(w, OkResponse{Result: fmt.Sprintf("event with id %s updated", ev.ID)})
@@ -117,17 +118,13 @@ func (c *CalendarHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	var ev domain.Event
 
 	if err := dec.Decode(&ev); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf(`{"error": "%v"}`, err.Error()), http.StatusBadRequest)
 		return
 	}
 
 	if err := c.repo.Calendar.DeleteEvent(ev.ID); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf(`{"error": "%v"}`, err.Error()), http.StatusInternalServerError)
 		return
-	}
-
-	type OkResponse struct {
-		Result string `json:"result"`
 	}
 
 	renderJSON(w, OkResponse{Result: fmt.Sprintf("event with id %s deleted", ev.ID)})
@@ -135,75 +132,60 @@ func (c *CalendarHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 
 //GetEventForDay return list of events on a given day
 func (c *CalendarHandler) GetEventForDay(w http.ResponseWriter, r *http.Request) {
-	if checkMediaType(w, r) == false {
+	if !r.URL.Query().Has("user_id") || !r.URL.Query().Has("date") {
+		http.Error(w, `{"error": "not enough parameter"}`, http.StatusBadRequest)
 		return
 	}
 
-	dec := json.NewDecoder(r.Body)
-	dec.DisallowUnknownFields()
+	UserID := r.URL.Query().Get("user_id")
+	date, err  := time.Parse(time.RFC3339, r.URL.Query().Get("date"))
 
-	var ev domain.Event
-
-	if err := dec.Decode(&ev); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error": "%v"}`, err.Error()), http.StatusBadRequest)
 		return
 	}
 
-	events := c.repo.Calendar.GetEventForDay(ev.UserID, &ev.Date)
+	events := c.repo.Calendar.GetEventForDay(UserID, &date)
 
-	type OkResponse struct {
-		Result []domain.Event `json:"result"`
-	}
-
-	renderJSON(w, OkResponse{Result: events})
+	renderJSON(w, EventResponse{Result: events})
 }
 
 //GetEventForWeek return list of events on a given week
 func (c *CalendarHandler) GetEventForWeek(w http.ResponseWriter, r *http.Request) {
-	if checkMediaType(w, r) == false {
+	if !r.URL.Query().Has("user_id") || !r.URL.Query().Has("date") {
+		http.Error(w, `{"error": "not enough parameter"}`, http.StatusBadRequest)
 		return
 	}
 
-	dec := json.NewDecoder(r.Body)
-	dec.DisallowUnknownFields()
+	UserID := r.URL.Query().Get("user_id")
+	date, err  := time.Parse(time.RFC3339, r.URL.Query().Get("date"))
 
-	var ev domain.Event
-
-	if err := dec.Decode(&ev); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error": "%v"}`, err.Error()), http.StatusBadRequest)
 		return
 	}
 
-	events := c.repo.Calendar.GetEventForDay(ev.UserID, &ev.Date)
+	events := c.repo.Calendar.GetEventForWeek(UserID, &date)
 
-	type OkResponse struct {
-		Result []domain.Event `json:"result"`
-	}
-
-	renderJSON(w, OkResponse{Result: events})
+	renderJSON(w, EventResponse{Result: events})
 }
 
 //GetEventForMonth return list of events on a given month
 func (c *CalendarHandler) GetEventForMonth(w http.ResponseWriter, r *http.Request) {
-	if checkMediaType(w, r) == false {
+	if !r.URL.Query().Has("user_id") || !r.URL.Query().Has("date") {
+		http.Error(w, `{"error": "not enough parameter"}`, http.StatusBadRequest)
 		return
 	}
 
-	dec := json.NewDecoder(r.Body)
-	dec.DisallowUnknownFields()
+	UserID := r.URL.Query().Get("user_id")
+	date, err  := time.Parse(time.RFC3339, r.URL.Query().Get("date"))
 
-	var ev domain.Event
-
-	if err := dec.Decode(&ev); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error": "%v"}`, err.Error()), http.StatusBadRequest)
 		return
 	}
 
-	events := c.repo.Calendar.GetEventForDay(ev.UserID, &ev.Date)
+	events := c.repo.Calendar.GetEventForMonth(UserID, &date)
 
-	type OkResponse struct {
-		Result []domain.Event `json:"result"`
-	}
-
-	renderJSON(w, OkResponse{Result: events})
+	renderJSON(w, EventResponse{Result: events})
 }

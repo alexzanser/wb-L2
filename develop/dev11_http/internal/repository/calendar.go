@@ -53,6 +53,7 @@ func (c *calendar) CreateEvent(ev *domain.Event) error {
 	c.Lock()
 	c.Events[ev.ID] = *ev
 	c.Unlock()
+	fmt.Println(c.Events)
 	return nil
 }
 
@@ -92,6 +93,7 @@ func (c *calendar) DeleteEvent(id string) error {
 
 func (c *calendar) GetEventForDay(userID string, date *time.Time) []domain.Event {
 	res := make([]domain.Event, 0)
+
 	for _, event := range c.Events {
 		if event.UserID == userID {
 			if date.Equal(event.Date) {
